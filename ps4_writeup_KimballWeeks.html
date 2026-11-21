@@ -2562,7 +2562,7 @@ Transformation: log(sales)
 <pre><code>[1] 0.8782932</code></pre>
 </div>
 </div>
-<p>The ARIMA and ETS errors have a correlation of 0.88, so the models mostly miss in the same months and averaging cancels little error. ARIMA is also significantly better than ETS (2.4), so equal weights put half the weight on the worse model. Combining helps most when models are similarly accurate and their errors are less correlated, which isn’t the case here.</p>
+<p>The ARIMA and ETS errors have a correlation of 0.88, so the models mostly miss in the same months and averaging cancels little error. Combining helps most when models are similarly accurate and their errors are less correlated, which isn’t the case here.</p>
 </section>
 <section id="var-vs.-bvar" class="level2">
 <h2 class="anchored" data-anchor-id="var-vs.-bvar">VAR vs. BVAR</h2>
@@ -2647,8 +2647,8 @@ Transformation: log(sales)
 0.5693241 0.5268484 2.5212629 0.2277561 0.2069608 0.2153966 0.4973504 0.3789663 </code></pre>
 </div>
 </div>
-<p>The VAR(1) forecasts better for 7 of 8 variables. The exception is inflation, where the VAR(4) wins by 0.001, essentially a tie.</p>
-<p>The VAR(4) always fits the training data at least as well, but it estimates 264 coefficients versus 72 for the VAR(1), with only 120 quarters in the first training sample. The extra coefficients are noisy and mostly fit noise, which hurts the out-of-sample forecasts.</p>
+<p>The VAR(1) forecasts better for 7 of 8 variables. The exception is inflation, where the VAR(4) wins by 0.001.</p>
+<p>The VAR(4) always fits the training data at least as well, but it estimates 264 coefficients versus 72 for the VAR(1), with only 120 quarters in the first training sample.</p>
 </section>
 <section id="a-bvar" class="level3">
 <h3 class="anchored" data-anchor-id="a-bvar">4.3 A BVAR</h3>
@@ -2738,10 +2738,10 @@ Transformation: log(sales)
 </table>
 </div>
 </div>
-<p><strong>BVAR(4), λ = 0.3 vs. VAR(4).</strong> The BVAR wins for all 8 variables. The models have the same variables and lags, so the difference is the Minnesota prior, which shrinks coefficients toward zero and reduces estimation noise.</p>
-<p><strong>BVAR(4), λ = 0.3 vs. VAR(1).</strong> They are close. The BVAR wins for investment, inflation and the 10-year yield, and the VAR(1) wins for the other five. The VAR(1) is a crude form of shrinkage itself, since it sets lags 2 to 4 to zero.</p>
-<p><strong>λ = 0.05.</strong> Tighter shrinkage makes most forecasts worse (inflation goes from 0.197 to 0.330), though it is the best model for the fed funds rate. Pushing every coefficient toward zero throws away real persistence, so λ = 0.05 is too much shrinkage.</p>
-<p><strong>Is the winner’s RMSE a fair estimate of future accuracy?</strong> No. I pick the winner using the same test sample, so part of its edge is luck and its RMSE is biased downward. A fair estimate needs data that wasn’t used to choose the model.</p>
+<p><strong>BVAR(4), λ = 0.3 vs. VAR(4).</strong> The BVAR wins for all 8 variables. The difference is the Minnesota prior.</p>
+<p><strong>BVAR(4), λ = 0.3 vs. VAR(1).</strong> They are close. The BVAR wins for investment, inflation and the 10-year yield, and the VAR(1) wins for the other five.</p>
+<p><strong>λ = 0.05.</strong> Tighter shrinkage makes most forecasts worse (inflation goes from 0.197 to 0.330), though it is the best model for the fed funds rate.</p>
+<p><strong>Is the winner’s RMSE a fair estimate of future accuracy?</strong> No. I pick the winner using the same test sample, so part of its edge is luck and its RMSE is biased downward.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="co"># GDP growth (column 1)</span></span>
 <span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>e_var4 <span class="ot">&lt;-</span> actual[, <span class="st">&quot;gdp&quot;</span>] <span class="sc">-</span> fc_var4[, <span class="dv">1</span>]</span>
@@ -2782,7 +2782,7 @@ Transformation: log(sales)
 </div>
 </div>
 <p>For GDP growth, DM = 2.14 (p = 0.035), so the BVAR is significantly more accurate at the 5% level. For inflation, DM = 1.45 (p = 0.149), so the difference isn’t significant even though the BVAR has the lower RMSE.</p>
-<p>So the BVAR beats the VAR(4) consistently, but not every gap in the 4.3b table is significant. Small RMSE differences could just come from this particular test sample.</p>
+<p>So the BVAR beats the VAR(4) consistently, but not every gap in the 4.3b table is significant.</p>
 </section>
 </section>
 <section id="factor-model" class="level2">
@@ -2822,14 +2822,13 @@ Transformation: log(sales)
        5        5        6        2 </code></pre>
 </div>
 </div>
-<p>After the transformations, the data has 718 rows and 122 columns, as expected.</p>
+<p>After the transformations, the data has 718 rows and 122 columns.</p>
 <ul>
 <li><strong>INDPRO (code 5):</strong> monthly growth rate, 100 × the change in log.</li>
 <li><strong>PAYEMS (code 5):</strong> monthly growth rate, same as INDPRO.</li>
 <li><strong>CPIAUCSL (code 6):</strong> change in the monthly inflation rate.</li>
 <li><strong>FEDFUNDS (code 2):</strong> first difference, the monthly change in percentage points.</li>
 </ul>
-<p>FEDFUNDS is already in percent and sits near zero from 2009 to 2015, where logs break down, so a simple difference is enough to make it stationary. INDPRO is an index that grows exponentially, so its growth rate is the natural transformation.</p>
 </section>
 <section id="estimate-the-factors" class="level3">
 <h3 class="anchored" data-anchor-id="estimate-the-factors">5.2 Estimate the Factors</h3>
@@ -2846,7 +2845,7 @@ Proportion of Variance 0.149840 0.074070 0.070620 0.055750 0.043540
 Cumulative Proportion  0.149840 0.223910 0.294530 0.350280 0.393820</code></pre>
 </div>
 </div>
-<p>The first three factors explain about <strong>29.5%</strong> of the variation (15.0%, 7.4% and 7.1%), which matches class.</p>
+<p>The first three factors explain about <strong>29.5%</strong> of the variation (15.0%, 7.4% and 7.1%).</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>F1 <span class="ot">&lt;-</span> pc<span class="sc">$</span>x[, <span class="dv">1</span>] <span class="sc">*</span> <span class="fu">sign</span>(<span class="fu">cor</span>(pc<span class="sc">$</span>x[, <span class="dv">1</span>], fm<span class="sc">$</span>INDPRO))</span>
 <span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -2877,8 +2876,8 @@ Cumulative Proportion  0.149840 0.223910 0.294530 0.350280 0.393820</code></pre>
       0.6806883       0.6795890       0.6570361 </code></pre>
 </div>
 </div>
-<p>The <strong>first factor</strong> is most correlated with employment, industrial production and capacity utilization (PAYEMS, IPMANSICS, USGOOD, INDPRO, MANEMP, IPFPNSS, CUMFNS, DMANEMP). It is a real-activity factor, and the plot shows it falling sharply in recessions (1974–75, 1980, 2008–09).</p>
-<p>The <strong>second factor</strong> is most correlated with CPI and PCE price indexes (such as CPIAUCSL, PCEPI and CPITRNSL), so it is an inflation factor.</p>
+<p>The <strong>first factor</strong> is most correlated with employment, industrial production and capacity utilization (PAYEMS, IPMANSICS, USGOOD, INDPRO, MANEMP, IPFPNSS, CUMFNS, DMANEMP).</p>
+<p>The <strong>second factor</strong> is most correlated with CPI and PCE price indexes (such as CPIAUCSL, PCEPI and CPITRNSL), so it is probably an inflation factor.</p>
 </section>
 <section id="replicate-the-horse-race-from-class" class="level3">
 <h3 class="anchored" data-anchor-id="replicate-the-horse-race-from-class">5.3 Replicate the Horse Race from Class</h3>
@@ -2904,7 +2903,7 @@ Cumulative Proportion  0.149840 0.223910 0.294530 0.350280 0.393820</code></pre>
 </div>
 </div>
 <p>I get RMSEs of 0.617 for the AR(1) and 0.589 with the factors, matching class.</p>
-<p>Estimating the factors on the full sample would use data from after each forecast origin, which a real forecaster wouldn’t have. That look-ahead bias would make the factor model look better than it really is.</p>
+<p>Estimating the factors on the full sample would use data from after each forecast origin, which a real forecaster wouldn’t have.</p>
 </section>
 <section id="a-direct-forecast-of-inflation" class="level3">
 <h3 class="anchored" data-anchor-id="a-direct-forecast-of-inflation">5.4 A Direct Forecast of Inflation</h3>
@@ -2968,7 +2967,7 @@ Cumulative Proportion  0.149840 0.223910 0.294530 0.350280 0.393820</code></pre>
 </section>
 <section id="reflection" class="level2">
 <h2 class="anchored" data-anchor-id="reflection">Reflection</h2>
-<p>Simple models were often hard to beat: the VAR(1) beat the VAR(4), and the combination couldn’t beat ARIMA. The common lesson is that models with many freely estimated parameters end up fitting noise. Shrinkage, equal weights and factors all fix this the same way, by imposing structure instead of estimating every coefficient separately. Too much structure hurts too, as λ = 0.05 showed. I also learned to check DM tests before trusting a ranking, since many of the RMSE differences weren’t significant.</p>
+<p>Simple models are hard to beat: the VAR(1) beat the VAR(4), and the combination couldn’t beat ARIMA. Models with many freely estimated parameters end up fitting noise. Shrinkage, equal weights and factors all fix this the same way, by imposing structure instead of estimating every coefficient separately. Too much structure hurts too, as λ = 0.05 showed. I also learned to check DM tests before trusting a ranking, since many of the RMSE differences weren’t significant.g</p>
 </section>
 
 </main>
