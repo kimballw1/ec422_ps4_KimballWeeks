@@ -3,9 +3,9 @@ library(pacman)
 p_load(tidyverse, fpp3, BVAR)
 
 
-# Part 2: Liquor store sales ---------------------------------------------
+# Part 2: Liquor store sales
 
-# 2.1 Data ----------------------------------------------------------------
+# 2.1 Data -----------------------------
 
 liquor_raw <- read_csv(
   "data/MRTSSM4453USN.csv",
@@ -37,7 +37,7 @@ liquor |>
        y = "log(Sales)")
 
 
-# 2.2 Fit both models -----------------------------------------------------
+# 2.2-------------------------
 
 liquor_fit <- liquor |>
   model(arima = ARIMA(log(sales)),
@@ -46,23 +46,23 @@ liquor_fit <- liquor |>
 liquor_fit |> select(arima) |> report()
 liquor_fit |> select(ets) |> report()
 
-# Residual checks for the ARIMA model
+# Residual checks
 liquor_fit |> select(arima) |> gg_tsresiduals()
 
-# Ljung-Box at lag 24; dof = p + q + P + Q = 1 + 2 + 2 + 1 = 6
+# Ljung-Box
 liquor_fit |>
   select(arima) |>
   augment() |>
   features(.innov, ljung_box, lag = 24, dof = 6)
 
 
-# 2.3 The horse race ------------------------------------------------------
+# 2.3 -----------------------
 
 liquor_cv <- liquor |>
   stretch_tsibble(.init = 120, .step = 1) |>
   filter(.id < max(.id))
 
-# Slow (10+ minutes). Run once, then use the readRDS line below.
+
 liquor_cv_fit <- liquor_cv |>
   model(snaive = SNAIVE(sales),
         ets    = ETS(log(sales)),
@@ -70,7 +70,7 @@ liquor_cv_fit <- liquor_cv |>
 
 saveRDS(liquor_cv_fit, "results/liquor_cv_fit.rds")
 
-# In a new session, skip the block above and load the saved fits
+
 liquor_cv_fit <- readRDS("results/liquor_cv_fit.rds")
 
 liquor_cv_fc <- liquor_cv_fit |>
@@ -80,7 +80,7 @@ liquor_cv_fc |>
   accuracy(liquor, measures = list(RMSE = RMSE, MAE = MAE))
 
 
-# 2.4 Are the differences significant? ------------------------------------
+# 2.4 ------------------------------------
 
 liquor_errs <- liquor_cv_fc |>
   as_tibble() |>
@@ -111,9 +111,9 @@ liquor_combo_fc |>
 cor(liquor_errs$arima, liquor_errs$ets)
 
 
-# Part 4: A medium-scale VAR vs. a BVAR -----------------------------------
+# Part 4: A medium-scale VAR vs. a BVAR ------------------
 
-# 4.1 Data ----------------------------------------------------------------
+# 4.1 Data ------------------------
 
 qd_raw <- read_csv("data/fredqd_2026-09.csv", show_col_types = FALSE) |>
   slice(-(1:2))
@@ -139,7 +139,7 @@ y <- qd |> select(-date) |> as.matrix()
 nrow(y)   # should be 240
 head(y)
 
-# 4.1c. TS-CV setup: first training sample is 1960 Q1 - 1989 Q4
+# 4.1c. TS-CV setup
 N <- nrow(y)
 origins <- 120:(N - 1)
 actual <- y[121:N, ]
@@ -188,17 +188,15 @@ bvar_cv <- function(lambda) {
   fc
 }
 
-# Slow (1-2 minutes each). Run once, then load the saved results below.
 set.seed(422)
 fc_bvar_03 <- bvar_cv(0.3)
 saveRDS(fc_bvar_03, "results/fc_bvar_03.rds")
 
-# 4.3b. Much tighter prior
+# 4.3b
 set.seed(422)
 fc_bvar_005 <- bvar_cv(0.05)
 saveRDS(fc_bvar_005, "results/fc_bvar_005.rds")
 
-# In a new session, skip the two bvar_cv() runs above and load these
 fc_bvar_03  <- readRDS("results/fc_bvar_03.rds")
 fc_bvar_005 <- readRDS("results/fc_bvar_005.rds")
 
@@ -214,14 +212,13 @@ saveRDS(var_results, "results/var_results.rds")
 
 var_results |> knitr::kable(digits = 3)
 
-# 4.3c. DM test, VAR(4) vs. BVAR(4) lambda = 0.3
-# GDP growth (column 1)
+# 4.3c
 e_var4 <- actual[, "gdp"] - fc_var4[, 1]
 e_bvar <- actual[, "gdp"] - fc_bvar_03[, 1]
 
 forecast::dm.test(e_var4, e_bvar, h = 1, power = 2)
 
-# Inflation (column 5)
+# Inflation
 e_var4_infl <- actual[, "infl"] - fc_var4[, 5]
 e_bvar_infl <- actual[, "infl"] - fc_bvar_03[, 5]
 
@@ -229,15 +226,15 @@ forecast::dm.test(e_var4_infl, e_bvar_infl, h = 1, power = 2)
 
 
 
-# Part 5: A factor model with FRED-MD -------------------------------------
+# Part 5: A factor model with FRED-MD --------------
 
-# 5.1 Data ----------------------------------------------------------------
+# 5.1 Data ---------------------------
 
 md_raw <- read_csv("data/fredmd_2026-09.csv", show_col_types = FALSE)
 tcode <- unlist(md_raw[1, -1])
 md <- md_raw[-1, ] |> mutate(date = as.Date(sasdate, "%m/%d/%Y"))
 
-# Applies a McCracken-Ng transformation code to a series
+# Applies a McCracken-Ng
 transform_series <- function(x, code) {
   d <- function(v) c(NA, diff(v))
   switch(as.character(code),
@@ -250,7 +247,7 @@ transform_series <- function(x, code) {
          "7" = d(x / dplyr::lag(x) - 1))
 }
 
-# Transform every series, keep March 1960 - December 2019
+# Transform every series
 fm <- map2_dfc(md[names(tcode)], tcode, transform_series) |>
   mutate(date = md$date, .before = 1) |>
   filter(date >= as.Date("1960-03-01"), date <= as.Date("2019-12-01"))
@@ -258,7 +255,7 @@ fm <- map2_dfc(md[names(tcode)], tcode, transform_series) |>
 # Drop any series with missing values in the sample
 fm <- fm[, colSums(is.na(fm)) == 0]
 
-dim(fm)   # should be 718 x 122
+dim(fm)   
 
 tcode[c("INDPRO", "PAYEMS", "CPIAUCSL", "FEDFUNDS")]
 
@@ -305,7 +302,7 @@ for (T in init:(n - 1)) {
 c(RMSE_AR = sqrt(mean(e_ar^2)), RMSE_FA = sqrt(mean(e_fa^2)))   # class: 0.617, 0.589
 
 
-# 5.4 A direct forecast of inflation --------------------------------------
+# 5.4 forecast of inflation --------------------------------------
 
 direct_race <- function(series, h = 12, r = 3) {
   lv <- md |>
